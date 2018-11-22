@@ -9,56 +9,15 @@
  */
 
 import React, {Component} from 'react';
-import {StyleSheet, Dimensions} from 'react-native';
-import {Navigation} from "react-native-navigation";
+import {StyleSheet, Text, View,} from 'react-native';
+
 
 type Props = {};
 export default class Drawer extends Component<Props> {
     render() {
-        const { width } = Dimensions.get('window');
-        Navigation.events().registerAppLaunchedListener(() => {
-            Navigation.setDefaultOptions({
-                topBar: {
-                    elevation: 0,
-                    visible: false,
-                    drawBehind: true,
-                    animate: false,
-                    buttonColor: 'white',
-                    title: {
-                        color: 'white',
-                        alignment: 'center'
-                    },
-                    background: {
-                        color: 'transparent'
-                    }
-                }
-            });
-            Navigation.setRoot({
-                root: {
-                    sideMenu: {
-                        left: {
-                            component: {
-                                id: 'drawerId',
-                                name: 'Drawer',
-                                fixedWidth: width
-                            }
-                        },
-                        center: {
-                            stack: {
-                                id: 'MAIN_STACK',
-                                children: [
-                                    {
-                                        component: {
-                                            name: 'Splash',
-                                        }
-                                    },
-                                ]
-                            }
-                        }
-                    },
-                }
-            });
-        });
+        return <View style={styles.container}>
+            <Text style={styles.welcome}>Welcome to React Native Quizz App!</Text>
+        </View>
     }
 }
 

@@ -7,7 +7,7 @@
  */
 
 import React, {Component} from 'react';
-import {Platform, StyleSheet, Button, Text, View} from 'react-native';
+import { StyleSheet, Button, Text, View} from 'react-native';
 import {Navigation} from 'react-native-navigation'
 
 type Props = {};
@@ -37,12 +37,13 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'stretch',
         backgroundColor: '#F5FCFF',
+        marginTop: 50
     },
     welcome: {
         fontSize: 20,
         textAlign: 'center',
         alignItems: 'center',
-        margin: 10,
+        marginTop: 50,
     },
     instructions: {
         textAlign: 'center',
