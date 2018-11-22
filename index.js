@@ -5,7 +5,8 @@ import QuizScreen from './screens/Quiz'
 import ScoreScreen from './screens/ScoreScreen'
 import TestScreen from './screens/TestScreen'
 import Drawer from './screens/Drawer'
-import {Dimensions} from "react-native";
+import {Button, Dimensions, View} from "react-native";
+import React from "react";
 
 
 Navigation.registerComponent(`QuizScreen`, () => QuizScreen);
@@ -49,6 +50,13 @@ Navigation.events().registerAppLaunchedListener(() => {
                             {
                                 component: {
                                     name: 'QuizScreen',
+                                    options: {
+                                        topBar: {
+                                            title: {
+                                                text: 'Quiz'
+                                            }
+                                        },
+                                    }
                                 }
                             },
                         ]
