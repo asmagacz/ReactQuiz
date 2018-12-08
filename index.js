@@ -5,31 +5,34 @@ import QuizScreen from './screens/Quiz'
 import ScoreScreen from './screens/ScoreScreen'
 import TestScreen from './screens/TestScreen'
 import Drawer from './screens/Drawer'
-import {Button, Dimensions, View} from "react-native";
+
+import {Dimensions} from "react-native";
 import React from "react";
 
 
 Navigation.registerComponent(`QuizScreen`, () => QuizScreen);
-Navigation.registerComponent(`ScoreScreen`, () => ScoreScreen)
-Navigation.registerComponent(`TestScreen`, () => TestScreen)
-Navigation.registerComponent(`DrawerScreen`, () => Drawer)
+Navigation.registerComponent(`ScoreScreen`, () => ScoreScreen);
+Navigation.registerComponent(`TestScreen`, () => TestScreen);
+Navigation.registerComponent(`DrawerScreen`, () => Drawer);
+
 
 
 const {width} = Dimensions.get('window');
+
 Navigation.events().registerAppLaunchedListener(() => {
     Navigation.setDefaultOptions({
         topBar: {
             elevation: 0,
-            //visible: false,
+            visible: true,
             drawBehind: true,
             animate: false,
-            buttonColor: 'white',
+            buttonColor: 'black',
             title: {
-                color: 'white',
+                color: 'black',
                 alignment: 'center'
             },
             background: {
-                color: 'transparent'
+                color: 'rgba(81, 149, 217,1)'
             }
         }
     });
@@ -54,6 +57,9 @@ Navigation.events().registerAppLaunchedListener(() => {
                                         topBar: {
                                             title: {
                                                 text: 'Quiz'
+                                            },
+                                            rightButtons: {
+                                                text: 'Menu'
                                             }
                                         },
                                     }
