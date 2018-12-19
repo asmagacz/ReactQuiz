@@ -12,7 +12,7 @@ import { StyleSheet, Text, View, ListView, RefreshControl } from 'react-native';
 
 const ds = new ListView.DataSource({ rowHasChanged: (r1, r2) => r1 !== r2 });
 
-export default class ekran_wynikow extends Component {
+export default class ScoreScreen extends Component {
 
 
 

@@ -7,89 +7,160 @@
  */
 
 import React, {Component} from 'react';
-import {StyleSheet, Text, View, ScrollView, TouchableOpacity, StatusBar} from 'react-native';
+import {StyleSheet, Text, View, ScrollView, TouchableOpacity, StatusBar, AsyncStorage} from 'react-native';
 import {Navigation} from 'react-native-navigation'
 import Agreements from './Agreements'
+import SQLite from "react-native-sqlite-storage";
 
 Navigation.registerComponent(`AgreementsScreen`, () => Agreements);
+
+let DB;
+const getDB = () => DB ? DB : DB = SQLite.openDatabase({ name: 'QuizQuestions.db', createFromLocation: 1 });
 
 type Props = {};
 
 export default class QuizScreen extends Component<Props> {
-    goToScreen = (screenName) => {
+    constructor(props) {
+        super(props);
+        getDB();
+        this.state = {
+            internetConnection: true,
+            tests: []
+        };
+    }
+    componentWillMount = async() => {
+        try {
+            const value = await AsyncStorage.getItem('databaseDownloadDate');
+            if (value == null) {
+                this.downloadTests();
+            } else {
+                let now = new Date();
+                let then = new Date(JSON.parse(value).value);
+                const utc1 = Date.UTC(then.getFullYear(), then.getMonth(), then.getDate());
+                const utc2 = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+                if( Math.floor((utc2 - utc1) / 86400000) >= 1 ) {
+                    this.downloadTests();
+                } else {
+                    this.downloadDataFromDatabase(DB);
+                }
+            }
+        } catch (error) {}
+    };
+
+    downloadTests = () => {
+        fetch('https://pwsz-quiz-api.herokuapp.com/api/tests')
+            .then((response) => response.json())
+            .then((responseJson) => {
+                this.setState({tests: responseJson});
+                this.addTestsToDatabase(DB, responseJson);
+                this.downloadTestData();
+            })
+            .catch((error) => {
+                this.setState({internetConnection: false});
+                alert('Błąd podczas pobierania listy testów.\nSprawdź połączenie z internetem!');
+            });
+    };
+
+    addTestsToDatabase = (DB, data) => {
+        DB.transaction((tx) => {
+            tx.executeSql('DELETE FROM tests; DELETE FROM test; VACUUM;', [], (tx, results) => {});
+            for(let i = 0; i < data.length; i++) {
+                tx.executeSql(
+                    'INSERT INTO tests (id, name, description, tags, level, numberOfTasks) VALUES (?, ?, ?, ?, ?, ?);',
+                    [data[i].id, data[i].name, data[i].description, JSON.stringify(data[i].tags), data[i].level, data[i].numberOfTasks]
+                );
+            }
+        });
+    };
+
+    downloadTestData = () => {
+        for(let i = 0; i < this.state.tests.length; i++) {
+            fetch('https://pwsz-quiz-api.herokuapp.com/api/test/' + this.state.tests[i].id)
+                .then((data) => data.json())
+                .then((d) => {
+                    DB.transaction((tx) => {
+                        tx.executeSql(
+                            'INSERT INTO test (id, name, description, level, tasks, tags) VALUES (?, ?, ?, ?, ?, ?);',
+                            [d.id, d.name, d.description, JSON.stringify(d.level), JSON.stringify(d.tasks), JSON.stringify(d.tags)]
+                        );
+                    });
+                    AsyncStorage.setItem('databaseDownloadDate', JSON.stringify({"value":Date()}));
+                })
+                .catch((error) => {
+                    this.setState({internetConnection: false});
+                    alert('Błąd podczas pobierania danych szczegółowych testów.\nSprawdź połączenie z internetem!');
+                });
+        }
+    };
+
+    downloadDataFromDatabase = (DB) => {
+        DB.transaction((tx) => {
+            tx.executeSql('SELECT * FROM tests;', [], (tx, results) => {
+                let tests = [];
+                for(let i = 0; i < results.rows.length; i++) {
+                    tests[i] = results.rows.item(i);
+                }
+                this.setState({ tests: tests });
+            });
+        });
+    };
+
+
+    goToScreen = (screenName, testId) => {
         Navigation.push(this.props.componentId, {
-            component:{
+            component: {
                 name: screenName,
                 options: {
-                    title: {
-                        text: screenName
-                    },
-
-                }
+                    topBar: {
+                        title: {
+                            text: screenName
+                        }
+                    }
+                },
+                passProps: {
+                    testId: testId
+                },
             }
         })
     };
-    /*
-    constructor(props) {
-        super(props)
-
-        this.state = {
-            DataBase: [],
-            len: 0
-        };
-    }
-
-  componentWillMount() {
-        this.getData();
-    }
-
-    getData = async () => {
-        const res = await fetch('https://pwsz-quiz-api.herokuapp.com/api/results');
-        const json = await res.json();
-        let leng = json.length;
-        this.setState({
-            DataBase: json,
-            len: leng
-        })
-    };
-*/
 
     render() {
-        return <ScrollView>
-            <StatusBar
-                backgroundColor='rgba(81, 149, 217,1)'
-            />
-            <Agreements/>
+        if (!this.state.internetConnection) {
+            return (
+                <View style={styles.container}>
+                    <Text style={styles.text}>Musisz włączyć internet, by ściągnąć bazę danych!</Text>
+                </View>
+            );
+        } else {
 
-            <TouchableOpacity onPress={() => this.goToScreen('TestScreen')}>
-                <View >
-                    <Text style={styles.welcome}>Test #1</Text>
-                </View>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => this.goToScreen('TestScreen')}>
-                <View >
-                    <Text style={styles.welcome}>Test #2</Text>
-                </View>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => this.goToScreen('TestScreen')}>
-                <View >
-                    <Text style={styles.welcome}>Test #3</Text>
-                </View>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => this.goToScreen('TestScreen')}>
-                <View >
-                    <Text style={styles.welcome}>Test #4</Text>
-                </View>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => this.goToScreen('ScoreScreen')}>
-                <View style={styles.footer}>
-                    <Text>Score Screen</Text>
-                </View>
-            </TouchableOpacity>
-        </ScrollView>
+            let rows = [];
+            for (let i = 0; i < this.state.tests.length; i++) {
+                rows.push(
+                        <TouchableOpacity key={i} style={styles.welcome} onPress={() => this.goToScreen('TestScreen', this.state.tests[i].id)}>
+                            <Text style={styles.text}>{this.state.tests[i].name}</Text>
+                        </TouchableOpacity>
+                )
+            }
+
+            return (
+                <ScrollView>
+                    <StatusBar
+                        backgroundColor='rgba(81, 149, 217,1)'
+                    />
+                    <Agreements/>
+
+                    {rows}
+
+                    <TouchableOpacity onPress={() => this.goToScreen('ScoreScreen')}>
+                        <View style={styles.footer}>
+                            <Text>Score Screen</Text>
+                        </View>
+                    </TouchableOpacity>
+                </ScrollView>
+            );
+        }
     }
 }
-
 
 const styles = StyleSheet.create({
     container: {
@@ -128,3 +199,7 @@ const styles = StyleSheet.create({
         padding: 20
     }
 });
+
+
+
+

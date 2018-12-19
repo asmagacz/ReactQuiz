@@ -36,12 +36,6 @@ public class MainApplication extends NavigationApplication {
         return new ReactGateway(this, isDebug(), host);
     }
     //@Override
-   /* protected List<ReactPackage> getPackages() {
-        return Arrays.<ReactPackage>asList(
-                new SQLitePluginPackage(),   // register SQLite Plugin here
-                new MainReactPackage());
-    }*/
-
     protected List<ReactPackage> getPackages()
     {
         // Add additional packages you require here
